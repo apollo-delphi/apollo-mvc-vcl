@@ -2,8 +2,8 @@ object ViewVCLBase: TViewVCLBase
   Left = 0
   Top = 0
   Caption = 'ViewVCLBase'
-  ClientHeight = 441
-  ClientWidth = 624
+  ClientHeight = 201
+  ClientWidth = 304
   Color = clBtnFace
   OldCreateOrder = False
   Position = poScreenCenter
