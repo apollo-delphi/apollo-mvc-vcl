@@ -9,7 +9,7 @@ uses
   DUnitX.TestFramework,
   tst_Apollo_MVC_VCL in 'tst_Apollo_MVC_VCL.pas',
   Apollo_MVC_VCL in 'Apollo_MVC_VCL.pas' {ViewVCLBase},
-  Apollo_MVC_Core in '..\Vendors\Apollo_MVC_Core\\Apollo_MVC_Core.pas';
+  Apollo_MVC_Core in '..\Vendors\Apollo_MVC_Core\Apollo_MVC_Core.pas';
 
 begin
   Application.Initialize;
