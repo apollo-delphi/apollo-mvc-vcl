@@ -89,7 +89,7 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="tst_Apollo_MVC_VCL.pas"/>
+        <DCCReference Include="tstApollo_MVC_VCL.pas"/>
         <DCCReference Include="Apollo_MVC_VCL.pas">
             <Form>ViewVCLBase</Form>
             <FormType>dfm</FormType>
