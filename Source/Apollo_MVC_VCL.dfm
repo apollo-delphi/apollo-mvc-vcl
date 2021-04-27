@@ -6,7 +6,7 @@ object ViewVCLBase: TViewVCLBase
   ClientWidth = 304
   Color = clBtnFace
   OldCreateOrder = False
-  Position = poScreenCenter
+  Position = poOwnerFormCenter
   PixelsPerInch = 96
   TextHeight = 13
 end
