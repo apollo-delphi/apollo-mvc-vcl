@@ -12,10 +12,12 @@ uses
   Vcl.Forms,
   Vcl.Graphics,
   Winapi.Messages,
-  Winapi.Windows;
+  Winapi.Windows, FireDAC.UI.Intf, FireDAC.VCLUI.Wait, FireDAC.Stan.Intf,
+  FireDAC.Comp.UI;
 
 type
   TViewVCLBase = class abstract(TForm, IViewBase)
+    WaitCursor: TFDGUIxWaitCursor;
   private
     FViewBase: IViewBase;
     function GetViewBase: IViewBase;
