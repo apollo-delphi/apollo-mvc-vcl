@@ -4,6 +4,7 @@ interface
 
 uses
   Apollo_MVC_Core,
+  FireDAC.VCLUI.Wait,
   System.Classes,
   System.SysUtils,
   System.Variants,
@@ -12,12 +13,10 @@ uses
   Vcl.Forms,
   Vcl.Graphics,
   Winapi.Messages,
-  Winapi.Windows, FireDAC.UI.Intf, FireDAC.VCLUI.Wait, FireDAC.Stan.Intf,
-  FireDAC.Comp.UI;
+  Winapi.Windows;
 
-type
+ type
   TViewVCLBase = class abstract(TForm, IViewBase)
-    WaitCursor: TFDGUIxWaitCursor;
   private
     FViewBase: IViewBase;
     function GetViewBase: IViewBase;

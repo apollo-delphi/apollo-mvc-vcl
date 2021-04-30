@@ -9,9 +9,4 @@ object ViewVCLBase: TViewVCLBase
   Position = poOwnerFormCenter
   PixelsPerInch = 96
   TextHeight = 13
-  object WaitCursor: TFDGUIxWaitCursor
-    Provider = 'Forms'
-    Left = 248
-    Top = 24
-  end
 end
