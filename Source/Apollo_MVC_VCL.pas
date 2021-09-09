@@ -20,12 +20,15 @@ uses
   private
     FViewBase: IViewBase;
     function GetViewBase: IViewBase;
-    property BaseView: IViewBase read GetViewBase implements IViewBase;
+    property ViewBase: IViewBase read GetViewBase implements IViewBase;
   protected
     procedure DoClose(var Action: TCloseAction); override;
     procedure FireEvent(const aEventName: string);
+    procedure Init; virtual;
+    procedure Recover(const aPropName: string; aValue: string); virtual;
     procedure Remember(const aPropName: string; const aValue: Variant);
   public
+    constructor Create(aOwner: TComponent); override;
   end;
 
   TViewVCLMain = class abstract(TViewVCLBase)
@@ -35,11 +38,23 @@ uses
     constructor Create(aOwner: TComponent); override;
   end;
 
+  TFrameHelper = class helper for TFrame
+  protected
+    procedure FireEvent(aViewBase: IViewBase; const aEventName: string);
+  end;
+
 implementation
 
 {$R *.dfm}
 
 { TViewVCLBase }
+
+constructor TViewVCLBase.Create(aOwner: TComponent);
+begin
+  Init;
+
+  inherited;
+end;
 
 procedure TViewVCLBase.DoClose(var Action: TCloseAction);
 begin
@@ -51,19 +66,30 @@ end;
 
 procedure TViewVCLBase.FireEvent(const aEventName: string);
 begin
-  BaseView.FireEvent(aEventName);
+  ViewBase.FireEvent(aEventName);
 end;
 
 function TViewVCLBase.GetViewBase: IViewBase;
 begin
   if not Assigned(FViewBase) then
+  begin
     FViewBase := MakeViewBase(Self);
+    FViewBase.OnRecover := Recover;
+  end;
   Result := FViewBase;
+end;
+
+procedure TViewVCLBase.Init;
+begin
+end;
+
+procedure TViewVCLBase.Recover(const aPropName: string; aValue: string);
+begin
 end;
 
 procedure TViewVCLBase.Remember(const aPropName: string; const aValue: Variant);
 begin
-  BaseView.Remember(aPropName, aValue);
+  ViewBase.Remember(aPropName, aValue);
 end;
 
 { TViewVCLMain }
@@ -78,12 +104,28 @@ begin
     LinkToController(Controller);
   except
     on E: EAbstractError do
-      raise Exception.CreateFmt('MVC_VCL: %s should override LinkToController virtual procedure', [ClassName]);
+      raise Exception.CreateFmt('MVC_VCL: %s must override LinkToController virtual procedure.', [ClassName]);
   else
     raise;
   end;
 
   Controller.RegisterView(Self);
+end;
+
+{ TFrameHelper }
+
+procedure TFrameHelper.FireEvent(aViewBase: IViewBase; const aEventName: string);
+begin
+  if not Owner.InheritsFrom(TViewVCLBase) then
+    raise Exception.Create('TFrameHelper.GetViewBase: Owner of TFrame must inherits from TViewVCLBase.');
+
+  if not Assigned(aViewBase) then
+  begin
+    aViewBase := MakeViewBase(Self);
+    aViewBase.EventProc := TViewVCLBase(Owner).ViewBase.EventProc;
+  end;
+
+  aViewBase.FireEvent(aEventName);
 end;
 
 end.
