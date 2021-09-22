@@ -22,13 +22,15 @@ uses
     function GetViewBase: IViewBase;
     property ViewBase: IViewBase read GetViewBase implements IViewBase;
   protected
+    function EncodeNumProp(const aKey: string; const aNum: Integer): string;
+    function TryGetNumProp(const aPropName, aKey: string; out aNum: Integer): Boolean;
     procedure DoClose(var Action: TCloseAction); override;
     procedure FireEvent(const aEventName: string);
-    procedure Init; virtual;
+    procedure InitControls; virtual;
+    procedure InitVariables; virtual;
     procedure Recover(const aPropName: string; aValue: string); virtual;
     procedure Remember(const aPropName: string; const aValue: Variant);
-  public
-    constructor Create(aOwner: TComponent); override;
+    procedure ValidateControls; virtual;
   end;
 
   TViewVCLMain = class abstract(TViewVCLBase)
@@ -49,19 +51,20 @@ implementation
 
 { TViewVCLBase }
 
-constructor TViewVCLBase.Create(aOwner: TComponent);
-begin
-  Init;
-
-  inherited;
-end;
-
 procedure TViewVCLBase.DoClose(var Action: TCloseAction);
 begin
+  if ModalResult = mrOK then
+    ValidateControls;
   Action := TCloseAction.caFree;
   inherited;
 
   FireEvent(mvcViewClose);
+end;
+
+function TViewVCLBase.EncodeNumProp(const aKey: string;
+  const aNum: Integer): string;
+begin
+  Result := FViewBase.EncodeNumProp(aKey, aNum);
 end;
 
 procedure TViewVCLBase.FireEvent(const aEventName: string);
@@ -75,11 +78,17 @@ begin
   begin
     FViewBase := MakeViewBase(Self);
     FViewBase.OnRecover := Recover;
+    FViewBase.OnInitControls := InitControls;
+    FViewBase.OnInitVariables := InitVariables;
   end;
   Result := FViewBase;
 end;
 
-procedure TViewVCLBase.Init;
+procedure TViewVCLBase.InitControls;
+begin
+end;
+
+procedure TViewVCLBase.InitVariables;
 begin
 end;
 
@@ -90,6 +99,16 @@ end;
 procedure TViewVCLBase.Remember(const aPropName: string; const aValue: Variant);
 begin
   ViewBase.Remember(aPropName, aValue);
+end;
+
+function TViewVCLBase.TryGetNumProp(const aPropName, aKey: string;
+  out aNum: Integer): Boolean;
+begin
+  Result := ViewBase.TryGetNumProp(aPropName, aKey, aNum);
+end;
+
+procedure TViewVCLBase.ValidateControls;
+begin
 end;
 
 { TViewVCLMain }
