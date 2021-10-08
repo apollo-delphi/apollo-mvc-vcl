@@ -15,12 +15,11 @@ uses
   Winapi.Messages,
   Winapi.Windows;
 
- type
+type
   TViewVCLBase = class abstract(TForm, IViewBase)
   private
     FViewBase: IViewBase;
     function GetViewBase: IViewBase;
-    property ViewBase: IViewBase read GetViewBase implements IViewBase;
   protected
     function EncodeNumProp(const aKey: string; const aNum: Integer): string;
     function TryGetNumProp(const aPropName, aKey: string; out aNum: Integer): Boolean;
@@ -28,9 +27,10 @@ uses
     procedure FireEvent(const aEventName: string);
     procedure InitControls; virtual;
     procedure InitVariables; virtual;
-    procedure Recover(const aPropName: string; aValue: string); virtual;
+    procedure Recover(const aPropName: string; aValue: Variant); virtual;
     procedure Remember(const aPropName: string; const aValue: Variant);
     procedure ValidateControls; virtual;
+    property ViewBase: IViewBase read GetViewBase implements IViewBase;
   end;
 
   TViewVCLMain = class abstract(TViewVCLBase)
@@ -42,7 +42,8 @@ uses
 
   TFrameHelper = class helper for TFrame
   protected
-    procedure FireEvent(aViewBase: IViewBase; const aEventName: string);
+    function GetOwnerViewBase: IViewBase;
+    procedure FireEvent(var aViewBase: IViewBase; const aEventName: string);
   end;
 
 implementation
@@ -92,7 +93,7 @@ procedure TViewVCLBase.InitVariables;
 begin
 end;
 
-procedure TViewVCLBase.Recover(const aPropName: string; aValue: string);
+procedure TViewVCLBase.Recover(const aPropName: string; aValue: Variant);
 begin
 end;
 
@@ -133,7 +134,7 @@ end;
 
 { TFrameHelper }
 
-procedure TFrameHelper.FireEvent(aViewBase: IViewBase; const aEventName: string);
+procedure TFrameHelper.FireEvent(var aViewBase: IViewBase; const aEventName: string);
 begin
   if not Owner.InheritsFrom(TViewVCLBase) then
     raise Exception.Create('TFrameHelper.GetViewBase: Owner of TFrame must inherits from TViewVCLBase.');
@@ -141,10 +142,18 @@ begin
   if not Assigned(aViewBase) then
   begin
     aViewBase := MakeViewBase(Self);
-    aViewBase.EventProc := TViewVCLBase(Owner).ViewBase.EventProc;
+    aViewBase.EventProc := GetOwnerViewBase.EventProc;
   end;
 
   aViewBase.FireEvent(aEventName);
+end;
+
+function TFrameHelper.GetOwnerViewBase: IViewBase;
+begin
+  if not Owner.InheritsFrom(TViewVCLBase) then
+    raise Exception.Create('TFrameHelper.GetViewBase: Owner of TFrame must inherits from TViewVCLBase.');
+
+  Result := TViewVCLBase(Owner).ViewBase;
 end;
 
 end.
