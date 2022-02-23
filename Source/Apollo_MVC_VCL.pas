@@ -20,6 +20,7 @@ type
   private
     FViewBase: IViewBase;
     function GetViewBase: IViewBase;
+    property ViewBase: IViewBase read GetViewBase implements IViewBase;
   protected
     function EncodeNumProp(const aKey: string; const aNum: Integer): string;
     function TryGetNumProp(const aPropName, aKey: string; out aNum: Integer): Boolean;
@@ -27,10 +28,12 @@ type
     procedure FireEvent(const aEventName: string);
     procedure InitControls; virtual;
     procedure InitVariables; virtual;
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure Recover(const aPropName: string; aValue: Variant); virtual;
     procedure Remember(const aPropName: string; const aValue: Variant);
     procedure ValidateControls; virtual;
-    property ViewBase: IViewBase read GetViewBase implements IViewBase;
+  public
+    constructor Create(AOwner: TComponent); override;
   end;
 
   TViewVCLMain = class abstract(TViewVCLBase)
@@ -44,6 +47,7 @@ type
   protected
     function GetOwnerViewBase: IViewBase;
     procedure FireEvent(var aViewBase: IViewBase; const aEventName: string);
+    procedure RegisterFrame(var aViewBase: IViewBase);
   end;
 
 implementation
@@ -51,6 +55,14 @@ implementation
 {$R *.dfm}
 
 { TViewVCLBase }
+
+constructor TViewVCLBase.Create(AOwner: TComponent);
+begin
+  inherited;
+
+  if not gAllowDirectConstructorForView then
+    raise Exception.CreateFmt('TViewVCLBase.Create: Do not use direct constructor for view %s. Use controller`s CreateView procedure instead.', [ClassName]);
+end;
 
 procedure TViewVCLBase.DoClose(var Action: TCloseAction);
 begin
@@ -93,6 +105,15 @@ procedure TViewVCLBase.InitVariables;
 begin
 end;
 
+procedure TViewVCLBase.Notification(AComponent: TComponent;
+  Operation: TOperation);
+begin
+  inherited;
+
+  if AComponent is TFrame then
+    GetViewBase.EventProc(mvcRemoverFrame, AComponent);
+end;
+
 procedure TViewVCLBase.Recover(const aPropName: string; aValue: Variant);
 begin
 end;
@@ -118,10 +139,16 @@ constructor TViewVCLMain.Create(aOwner: TComponent);
 var
   Controller: TControllerAbstract;
 begin
-  inherited;
+  gAllowDirectConstructorForView := True;
+  try
+    inherited;
+  finally
+    gAllowDirectConstructorForView := False;
+  end;
 
   try
-    LinkToController(Controller);
+    Controller := nil;
+    LinkToController({out}Controller);
   except
     on E: EAbstractError do
       raise Exception.CreateFmt('MVC_VCL: %s must override LinkToController virtual procedure.', [ClassName]);
@@ -129,7 +156,10 @@ begin
     raise;
   end;
 
-  Controller.RegisterView(Self);
+  if not Assigned(Controller) then
+    raise Exception.CreateFmt('MVC_VCL: procedure LinkToController out param aController is not assigned.', [ClassName]);
+
+  ViewBase.RegisterInController(Controller);
 end;
 
 { TFrameHelper }
@@ -154,6 +184,12 @@ begin
     raise Exception.Create('TFrameHelper.GetViewBase: Owner of TFrame must inherits from TViewVCLBase.');
 
   Result := TViewVCLBase(Owner).ViewBase;
+end;
+
+procedure TFrameHelper.RegisterFrame(var aViewBase: IViewBase);
+begin
+  FireEvent(aViewBase, mvcRegisterFrame);
+  FreeNotification(TViewVCLBase(GetOwnerViewBase.View));
 end;
 
 end.
