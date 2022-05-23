@@ -45,7 +45,7 @@ type
 
   TFrameHelper = class helper for TFrame
   protected
-    function GetOwnerViewBase: IViewBase;
+    function GetParentViewBase: IViewBase;
     procedure FireEvent(var aViewBase: IViewBase; const aEventName: string);
     procedure RegisterFrame(var aViewBase: IViewBase);
   end;
@@ -166,30 +166,31 @@ end;
 
 procedure TFrameHelper.FireEvent(var aViewBase: IViewBase; const aEventName: string);
 begin
-  if not Owner.InheritsFrom(TViewVCLBase) then
-    raise Exception.Create('TFrameHelper.GetViewBase: Owner of TFrame must inherits from TViewVCLBase.');
-
   if not Assigned(aViewBase) then
   begin
     aViewBase := MakeViewBase(Self);
-    aViewBase.EventProc := GetOwnerViewBase.EventProc;
+    aViewBase.EventProc := GetParentViewBase.EventProc;
   end;
 
   aViewBase.FireEvent(aEventName);
 end;
 
-function TFrameHelper.GetOwnerViewBase: IViewBase;
+function TFrameHelper.GetParentViewBase: IViewBase;
+var
+  ParentView: TCustomForm;
 begin
-  if not Owner.InheritsFrom(TViewVCLBase) then
-    raise Exception.Create('TFrameHelper.GetViewBase: Owner of TFrame must inherits from TViewVCLBase.');
+  ParentView := GetParentForm(Self);
 
-  Result := TViewVCLBase(Owner).ViewBase;
+  if not ParentView.InheritsFrom(TViewVCLBase) then
+    raise Exception.Create('TFrameHelper.GetViewBase: Parent Form of TFrame must inherits from TViewVCLBase.');
+
+  Result := TViewVCLBase(ParentView).ViewBase;
 end;
 
 procedure TFrameHelper.RegisterFrame(var aViewBase: IViewBase);
 begin
   FireEvent(aViewBase, mvcRegisterFrame);
-  FreeNotification(TViewVCLBase(GetOwnerViewBase.View));
+  FreeNotification(TViewVCLBase(GetParentViewBase.View));
 end;
 
 end.
