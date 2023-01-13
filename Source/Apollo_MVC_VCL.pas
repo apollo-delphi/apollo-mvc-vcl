@@ -110,7 +110,10 @@ procedure TViewVCLBase.Notification(AComponent: TComponent;
 begin
   inherited;
 
-  if AComponent is TFrame then
+  if (AComponent is TFrame) and
+     (Operation = opRemove) and
+     not(csDestroying in ComponentState)
+  then
     GetViewBase.EventProc(mvcRemoverFrame, AComponent);
 end;
 
@@ -178,7 +181,7 @@ end;
 function TFrameHelper.GetOwnerViewBase: IViewBase;
 begin
   if not Owner.InheritsFrom(TViewVCLBase) then
-    raise Exception.Create('TFrameHelper.GetViewBase: Owner of TFrame must inherits from TViewFMXBase.');
+    raise Exception.Create('TFrameHelper.GetViewBase: Owner of TFrame must inherits from TViewVCLBase.');
 
   Result := TViewVCLBase(Owner).ViewBase;
 end;
